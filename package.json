@@ -31,6 +31,10 @@
     "recharts": "^2.12.7",
     "tailwind-merge": "^2.3.0",
     "tsx": "^4.11.0",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.12",
+    "@vitejs/plugin-react": "^4.3.0",
+    "esbuild": "^0.21.4",
     "xlsx": "^0.18.5",
     "zod": "^3.23.8"
   },
@@ -42,13 +46,8 @@
     "@types/pdfkit": "^0.17.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^4.3.0",
     "autoprefixer": "^10.4.19",
-    "esbuild": "^0.21.4",
     "postcss": "^8.4.38",
-    "tailwindcss": "^3.4.4",
-    "tsx": "^4.11.0",
-    "typescript": "^5.4.5",
-    "vite": "^5.2.12"
+    "tailwindcss": "^3.4.4"
   }
 }
