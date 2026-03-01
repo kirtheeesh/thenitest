@@ -1,4 +1,4 @@
-# Theni Aanantham - Employee Billing Report & Analytics System
+#Employee Billing Report & Analytics System
 
 A production-ready MERN stack application for managing and analyzing employee billing transactions across multiple floors with advanced reporting and export capabilities.
 
