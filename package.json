@@ -11,6 +11,7 @@
     "check:errors": "node ./script/color-check.js"
   },
   "dependencies": {
+    "@babel/preset-typescript": "^7.28.5",
     "axios": "^1.7.2",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
@@ -29,9 +30,9 @@
     "react-router-dom": "^6.23.1",
     "recharts": "^2.12.7",
     "tailwind-merge": "^2.3.0",
+    "tsx": "^4.11.0",
     "xlsx": "^0.18.5",
-    "zod": "^3.23.8",
-    "tsx": "^4.11.0"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
