@@ -23,6 +23,12 @@ async function build() {
   });
 
   console.log("Building server...");
+  const packageJson = JSON.parse(fs.readFileSync(path.resolve(__dirname, "..", "package.json"), "utf-8"));
+  const externals = [
+    ...Object.keys(packageJson.dependencies || {}),
+    ...Object.keys(packageJson.devDependencies || {}),
+  ];
+  
   await esbuild({
     entryPoints: [path.resolve(__dirname, "..", "server", "index.ts")],
     bundle: true,
@@ -30,7 +36,7 @@ async function build() {
     target: "node20",
     outfile: path.resolve(__dirname, "..", "dist", "index.js"),
     format: "esm",
-    external: ["express", "mongoose", "mongodb", "vite", "esbuild"],
+    external: externals,
   });
 
   console.log("Build complete!");
