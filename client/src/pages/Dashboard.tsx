@@ -1,14 +1,15 @@
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { SidebarContext } from '../components/Layout';
 import { 
   Users, IndianRupee, Smartphone, PhoneOff, 
   ArrowDownCircle, ArrowUpCircle, Gift, 
   FileDown, FileSpreadsheet, Search,
-  AlertCircle, Filter, ChevronUp, ChevronDown, RotateCcw
+  AlertCircle, ChevronUp, RotateCcw
 } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, LineChart, Line, Legend, AreaChart, Area 
+  PieChart, Pie, Cell, Legend, AreaChart, Area 
 } from 'recharts';
 import api from '../lib/api';
 import { format } from 'date-fns';
@@ -28,7 +29,8 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showReport, setShowReport] = useState(false);
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters] = useState(true);
+  const { isSidebarOpen } = useContext(SidebarContext);
 
   const fetchCashiers = async (floor: string) => {
     try {
@@ -193,7 +195,9 @@ const Dashboard: React.FC = () => {
   return (
     <div className="animate-in fade-in duration-500 max-w-[100%]">
       {/* Filters & Top Actions Section - Sticky Header */}
-      <div className={`sticky top-0 z-[100] bg-gray-50/80 backdrop-blur-md py-2 -mx-4 px-4 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 mb-2 items-start transition-all duration-300 shadow-sm border-b border-gray-100`}>
+  {!isSidebarOpen && (
+    <div className={`sticky top-0 z-[100] bg-gray-50/80 backdrop-blur-md py-2 px-4 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 mb-2 items-start transition-all duration-300 shadow-sm border-b border-gray-100`}>
+  
         <section className="bg-white/95 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-blue-100 flex-1 ring-4 ring-white/50">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3">
             <div className="space-y-1">
@@ -268,6 +272,7 @@ const Dashboard: React.FC = () => {
           </button>
         </div>
       </div>
+  )}
 
       {loading && (
         <div className="flex flex-col items-center justify-center py-20 animate-in fade-in duration-500">
@@ -287,9 +292,9 @@ const Dashboard: React.FC = () => {
         <div className={`space-y-4 ${!error ? 'mt-4' : ''}`}>
           {/* High Density KPI Summary - Only shown in Table View */}
           {!showReport && (
-            <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 animate-in zoom-in-95 duration-500">
+            <section className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 animate-in zoom-in-95 duration-500">
               <Card title="Total Customers" value={reportData.metrics.totalCustomers} icon={<Users size={18} />} color="blue" />
-              <Card title="Total Revenue" value={`₹${reportData.metrics.totalBillingAmount.toLocaleString()}`} icon={<IndianRupee size={18} />} color="green" />
+              <Card title="Total Revenue" value={`₹${reportData.metrics.totalBillingAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} icon={<IndianRupee size={18} />} color="green" />
               <Card title="With Mobile" value={reportData.metrics.withMobile} icon={<Smartphone size={18} />} color="emerald" />
               <Card title="Without Mobile" value={reportData.metrics.withoutMobile} icon={<PhoneOff size={18} />} color="amber" />
               <Card title="Bills < ₹100" value={reportData.metrics.below100} icon={<ArrowDownCircle size={18} />} color="slate" />
@@ -561,7 +566,7 @@ const Dashboard: React.FC = () => {
                           contentStyle={{borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px'}} 
                         />
                         <Bar dataKey="value" fill="#f97316" radius={[10, 10, 0, 0]} barSize={40}>
-                          {barData.map((entry, index) => (
+                          {barData.map((_, index) => (
                             <Cell key={`cell-${index}`} fill={index === 0 ? '#6366f1' : '#f97316'} />
                           ))}
                         </Bar>
@@ -592,7 +597,7 @@ const Dashboard: React.FC = () => {
                           dataKey="value" 
                           stroke="none"
                         >
-                          {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                          {pieData.map((_, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                         </Pie>
                         <Tooltip 
                           contentStyle={{borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px'}} 
@@ -635,16 +640,16 @@ const colorMap: any = {
 };
 
 return (
-  <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden relative">
+  <div className="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden relative">
     <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-5 transition-transform duration-500 group-hover:scale-150 ${colorMap[color].split(' ')[0]}`}></div>
-    <div className="flex items-center gap-4 relative z-10">
-      <div className={`p-3 rounded-xl text-white shadow-lg ${colorMap[color]}`}>
+      <div className="flex items-center gap-3 relative z-10">
+      <div className={`p-2 rounded-xl text-white shadow-lg ${colorMap[color]}`}>
         {icon}
       </div>
-      <div>
-         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{title}</p>
-         <h4 className="text-xl font-black text-gray-900 mt-0.5 tracking-tight">{value}</h4>
-      </div>
+    <div className="min-w-0 flex-1">
+      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{title}</p>
+      <h4 className="text-base md:text-lg lg:text-xl font-black text-gray-900 mt-0.5 tracking-tight whitespace-nowrap">{value}</h4>
+    </div>
     </div>
   </div>
 );

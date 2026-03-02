@@ -7,10 +7,29 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
+export const SidebarContext = React.createContext<{ isSidebarOpen: boolean; setIsSidebarOpen: (v: boolean) => void }>({ isSidebarOpen: false, setIsSidebarOpen: () => {} });
+
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Closed by default for focus
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    // Show sidebar by default on large screens for a typical admin layout
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth >= 1024;
+  }); // Closed on small screens by default
+
+  // Keep sidebar state in sync with viewport changes so desktop shows persistent sidebar
+  React.useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -33,9 +52,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       >
         <div className="p-6 border-b flex items-center justify-between bg-white sticky top-0">
           <div className="flex items-center gap-3">
-            <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-200">
-              <Store size={24} />
-            </div>
             <span className="font-black text-xl text-gray-900 tracking-tighter">
               Reports
             </span>
@@ -115,7 +131,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {/* Scrollable Content Container */}
         <div className="flex-1 overflow-auto custom-scrollbar p-3 md:p-4 pt-1 md:pt-1">
           <div className="max-w-[100%] mx-auto">
-            {children}
+            <SidebarContext.Provider value={{ isSidebarOpen, setIsSidebarOpen }}>
+              {children}
+            </SidebarContext.Provider>
           </div>
         </div>
       </main>
