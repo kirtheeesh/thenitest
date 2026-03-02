@@ -195,8 +195,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="animate-in fade-in duration-500 max-w-[100%]">
       {/* Filters & Top Actions Section - Sticky Header */}
-  {!isSidebarOpen && (
-    <div className={`sticky top-0 z-[100] bg-gray-50/80 backdrop-blur-md py-2 px-4 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 mb-2 items-start transition-all duration-300 shadow-sm border-b border-gray-100`}>
+      <div className={`sticky top-0 z-[100] bg-gray-50/80 backdrop-blur-md py-2 px-4 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 mb-2 items-center transition-all duration-300 shadow-sm border-b border-gray-100`}>
   
         <section className="bg-white/95 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-blue-100 flex-1 ring-4 ring-white/50">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3">
@@ -258,7 +257,7 @@ const Dashboard: React.FC = () => {
           >
             <RotateCcw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
-
+          
           <button
             onClick={() => setShowReport(!showReport)}
             className={`flex items-center justify-center gap-3 px-6 py-3 rounded-2xl font-black text-xs shadow-xl transition-all duration-300 border-2 active:scale-95 ${
@@ -272,7 +271,6 @@ const Dashboard: React.FC = () => {
           </button>
         </div>
       </div>
-  )}
 
       {loading && (
         <div className="flex flex-col items-center justify-center py-20 animate-in fade-in duration-500">

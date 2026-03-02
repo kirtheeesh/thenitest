@@ -109,27 +109,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const processed = transactions
-        .filter((t: any) => t.entryNo && t.billAmt) // Only keep rows with essential data
+        .filter((t: any) => t && (t.entryNo || t['Entry No']) && (t.billAmt || t['Bill Amt'] || t['Bill Amount'])) // Only keep rows with essential data
         .map((t: any) => {
+          const entryNo = String(t.entryNo || t['Entry No'] || t['EntryNo'] || t['Bill No'] || '').trim();
+          const billAmt = Number(t.billAmt || t['Bill Amt'] || t['Bill Amount'] || 0);
+          
           const d = t.entryDate ? new Date(t.entryDate) : new Date();
           const validDate = isNaN(d.getTime()) ? new Date() : d;
           
           return {
-            entryNo: String(t.entryNo).trim(),
+            entryNo: entryNo,
             entryDate: validDate,
-            cashier: String(t.cashier || 'Unknown').trim(),
+            cashier: String(t.cashier || t['Cashier'] || 'Unknown').trim(),
             floor: Number(t.floor || 1),
-            cash: Number(t.cash || 0),
-            card: Number(t.card || 0),
-            cheque: Number(t.cheque || 0),
-            others: Number(t.others || 0),
-            balance: Number(t.balance || 0),
-            billAmt: Number(t.billAmt || 0),
-            discAmt: Number(t.discAmt || 0),
-            refundAmt: Number(t.refundAmt || 0),
-            customer: String(t.customer || '').trim(),
-            cusMob: String(t.cusMob || '').trim(),
-            groupBillNo: String(t.groupBillNo || '').trim()
+            cash: Number(t.cash || t['Cash'] || 0),
+            card: Number(t.card || t['Card'] || 0),
+            cheque: Number(t.cheque || t['Cheque'] || 0),
+            others: Number(t.others || t['Others'] || 0),
+            balance: Number(t.balance || t['Balance'] || 0),
+            billAmt: billAmt,
+            discAmt: Number(t.discAmt || t['Disc Amt'] || 0),
+            refundAmt: Number(t.refundAmt || t['Refund Amt'] || 0),
+            customer: String(t.customer || t['Customer'] || '').trim(),
+            cusMob: String(t.cusMob || t['CUSMob'] || t['Mobile'] || '').trim(),
+            groupBillNo: String(t.groupBillNo || t['GroupBillno'] || t['BillNo'] || '').trim()
           };
         });
 

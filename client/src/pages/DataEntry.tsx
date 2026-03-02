@@ -93,28 +93,38 @@ const DataEntry: React.FC = () => {
         const processed = data.map(item => {
           // Robust mapping for potential column name variations
           const getVal = (keys: string[]) => {
-            const key = keys.find(k => item[k] !== undefined);
-            return key ? item[key] : undefined;
+            const key = keys.find(k => {
+              if (item[k] !== undefined) return true;
+              // Also check case-insensitive match
+              const found = Object.keys(item).find(ik => ik.toLowerCase() === k.toLowerCase());
+              return found !== undefined;
+            });
+            if (key) return item[key];
+            const found = keys.map(k => Object.keys(item).find(ik => ik.toLowerCase() === k.toLowerCase())).find(f => f !== undefined);
+            return found ? item[found] : undefined;
           };
 
+          const billAmtVal = Number(getVal(['Bill Amt', 'billAmt', 'Bill Amount', 'Total Amt']) || 0);
+          const entryNoVal = String(getVal(['Entry No', 'entryNo', 'EntryNo', 'Bill No', 'BillNo']) || '').trim();
+
           return {
-            entryNo: String(getVal(['Entry No', 'entryNo', 'EntryNo']) || ''),
+            entryNo: entryNoVal,
             entryDate: getVal(['Entry Date', 'entryDate', 'Date']) || new Date().toISOString().split('T')[0],
-            cashier: String(getVal(['Cashier', 'cashier']) || ''),
+            cashier: String(getVal(['Cashier', 'cashier']) || 'Unknown').trim(),
             floor: uploadFloor,
-            cash: Number(getVal(['Cash', 'cash']) || 0),
-            card: Number(getVal(['Card', 'card']) || 0),
-            cheque: Number(getVal(['Cheque', 'cheque']) || 0),
-            others: Number(getVal(['Others', 'others']) || 0),
-            balance: Number(getVal(['Balance', 'balance', 'Bal']) || 0),
-            billAmt: Number(getVal(['Bill Amt', 'billAmt', 'Bill Amount']) || 0),
-            discAmt: Number(getVal(['Disc Amt', 'discAmt', 'Disc']) || 0),
+            cash: Number(getVal(['Cash', 'cash', 'Cash Amt']) || 0),
+            card: Number(getVal(['Card', 'card', 'Card Amt']) || 0),
+            cheque: Number(getVal(['Cheque', 'cheque', 'Cheque Amt']) || 0),
+            others: Number(getVal(['Others', 'others', 'Other Amt']) || 0),
+            balance: Number(getVal(['Balance', 'balance', 'Bal', 'Balance Amt']) || 0),
+            billAmt: billAmtVal,
+            discAmt: Number(getVal(['Disc Amt', 'discAmt', 'Disc', 'Discount']) || 0),
             refundAmt: Number(getVal(['Refund Amt', 'refundAmt', 'Refund']) || 0),
-            customer: String(getVal(['Customer', 'customer']) || ''),
-            cusMob: String(getVal(['CUSMob', 'cusMob', 'Mobile']) || ''),
-            groupBillNo: String(getVal(['GroupBillno', 'groupBillNo', 'BillNo']) || ''),
+            customer: String(getVal(['Customer', 'customer', 'Cust Name']) || '').trim(),
+            cusMob: String(getVal(['CUSMob', 'cusMob', 'Mobile', 'Phone']) || '').trim(),
+            groupBillNo: String(getVal(['GroupBillno', 'groupBillNo', 'BillNo', 'Grp Bill']) || '').trim(),
           };
-        });
+        }).filter(item => item.entryNo && item.billAmt > 0);
 
         setPreviewData(processed);
         setLoading(false);
@@ -146,6 +156,10 @@ const DataEntry: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const removePreviewRow = (index: number) => {
+    setPreviewData(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -337,7 +351,10 @@ const DataEntry: React.FC = () => {
           </div>
           <h3 className="text-xl font-bold text-gray-800 mb-2">Upload Excel File</h3>
           <p className="text-gray-500 text-center mb-8 max-w-sm">
-            Upload your billing spreadsheet. Ensure columns match the required format: Entry No, Entry Date, Cashier, Bill Amt, etc.
+            Please use an Excel file with the following columns. <strong>Bold columns are required:</strong>
+            <br />
+            <strong>Entry No</strong>, <strong>Bill Amt</strong>, <strong>Entry Date</strong>, <strong>Cashier</strong>, 
+            Customer, Mobile, Group Bill No, Cash, Card, Cheque, Others, Balance, Disc Amt, Refund Amt.
           </p>
           
           <form onSubmit={handleBulkUpload} className="w-full max-w-md space-y-6">
@@ -422,6 +439,7 @@ const DataEntry: React.FC = () => {
                       <th className="px-2 py-2 text-right">Disc</th>
                       <th className="px-2 py-2 text-right">Refund</th>
                       <th className="px-2 py-2">Customer</th>
+                      <th className="px-2 py-2 text-center">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 text-[11px]">
@@ -439,6 +457,15 @@ const DataEntry: React.FC = () => {
                         <td className="px-2 py-1.5 text-right text-gray-500">{row.discAmt.toFixed(2)}</td>
                         <td className="px-2 py-1.5 text-right text-gray-500">{row.refundAmt.toFixed(2)}</td>
                         <td className="px-2 py-1.5 text-gray-500 truncate max-w-[80px]">{row.customer}</td>
+                        <td className="px-2 py-1.5 text-center">
+                          <button
+                            onClick={() => removePreviewRow(idx)}
+                            className="text-red-500 hover:text-red-700 transition"
+                            title="Remove row"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
