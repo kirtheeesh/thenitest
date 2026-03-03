@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Upload, Plus, FileSpreadsheet, Send, AlertCircle, CheckCircle2, Trash2 } from 'lucide-react';
 import api from '../lib/api';
 import * as XLSX from 'xlsx';
+import { parse, isValid, format } from 'date-fns';
 
 const DataEntry: React.FC = () => {
   // activeTab removed: only manual entry UI is shown now
@@ -107,9 +108,12 @@ const DataEntry: React.FC = () => {
           const billAmtVal = Number(getVal(['Bill Amt', 'billAmt', 'Bill Amount', 'Total Amt']) || 0);
           const entryNoVal = String(getVal(['Entry No', 'entryNo', 'EntryNo', 'Bill No', 'BillNo']) || '').trim();
 
+          // Set entry date as today's date instead of from Excel
+          const finalDateStr = new Date().toISOString().split('T')[0];
+
           return {
             entryNo: entryNoVal,
-            entryDate: getVal(['Entry Date', 'entryDate', 'Date']) || new Date().toISOString().split('T')[0],
+            entryDate: finalDateStr,
             cashier: String(getVal(['Cashier', 'cashier']) || 'Unknown').trim(),
             floor: uploadFloor,
             cash: Number(getVal(['Cash', 'cash', 'Cash Amt']) || 0),
@@ -122,7 +126,7 @@ const DataEntry: React.FC = () => {
             refundAmt: Number(getVal(['Refund Amt', 'refundAmt', 'Refund']) || 0),
             customer: String(getVal(['Customer', 'customer', 'Cust Name']) || '').trim(),
             cusMob: String(getVal(['CUSMob', 'cusMob', 'Mobile', 'Phone']) || '').trim(),
-            groupBillNo: String(getVal(['GroupBillno', 'groupBillNo', 'BillNo', 'Grp Bill']) || '').trim(),
+            groupBillNo: String(getVal(['GroupBillno', 'groupBillNo', 'BillNo', 'Grp Bill', 'GroupName']) || '').trim(),
           };
         }).filter(item => item.entryNo && item.billAmt > 0);
 

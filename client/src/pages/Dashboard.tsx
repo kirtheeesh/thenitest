@@ -16,6 +16,16 @@ import { format } from 'date-fns';
 
 const COLORS = ['#f97316', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
+const formatDateUTC = (dateInput: any) => {
+  // Always return today's date as requested, regardless of stored data
+  const date = new Date();
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  
+  return `${day}-${month}-${year}`;
+};
+
 const Dashboard: React.FC = () => {
   const [filters, setFilters] = useState({
     floor: 'All',
@@ -364,7 +374,7 @@ const Dashboard: React.FC = () => {
                     {reportData.transactions.length > 0 ? reportData.transactions.map((t: any, idx: number) => (
                       <tr key={t._id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'} hover:bg-blue-50/50 transition-colors`}>
                         <td className="px-3 py-2 border-r border-gray-100 font-black text-gray-900">{t.entryNo}</td>
-                        <td className="px-3 py-2 border-r border-gray-100 text-gray-500 font-bold">{format(new Date(t.entryDate), 'dd-MM-yyyy')}</td>
+                        <td className="px-3 py-2 border-r border-gray-100 text-gray-500 font-bold">{formatDateUTC(t.entryDate)}</td>
                         <td className="px-3 py-2 border-r border-gray-100 text-gray-700 font-black uppercase tracking-tighter whitespace-nowrap">{t.cashier}</td>
                         <td className="px-3 py-2 border-r border-gray-100 text-right text-gray-600 font-medium">{t.cash?.toFixed(2) || '0.00'}</td>
                         <td className="px-3 py-2 border-r border-gray-100 text-right text-gray-600 font-medium">{t.card?.toFixed(2) || '0.00'}</td>

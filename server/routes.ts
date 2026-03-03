@@ -5,7 +5,7 @@ import * as xlsx from 'xlsx';
 import multer from 'multer';
 import PDFDocument from 'pdfkit';
 import ExcelJS from 'exceljs';
-import { format } from 'date-fns';
+import { format, parse, isValid } from 'date-fns';
 import { createServer, type Server } from "http";
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -62,7 +62,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Transaction routes
   app.post('/api/transactions/manual', authMiddleware, async (req: Request, res: Response) => {
     try {
-      const transaction = await storage.createTransaction(req.body);
+      const data = { ...req.body };
+      if (data.entryDate && typeof data.entryDate === 'string' && data.entryDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        data.entryDate = new Date(data.entryDate + 'T12:00:00Z');
+      }
+      const transaction = await storage.createTransaction(data);
       res.status(201).json({ message: 'Transaction saved successfully', transaction });
     } catch (error: any) {
       res.status(500).json({ message: 'Error saving transaction', error: error.message });
@@ -76,23 +80,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data: any[] = xlsx.utils.sheet_to_json(sheet);
       const floor = parseInt(req.body.floor);
-      const processedTransactions = data.map(item => ({
-        entryNo: String(item['Entry No'] || ''),
-        entryDate: item['Entry Date'] ? new Date(item['Entry Date']) : new Date(),
-        cashier: String(item['Cashier'] || ''),
-        floor: floor,
-        cash: Number(item['Cash'] || 0),
-        card: Number(item['Card'] || 0),
-        cheque: Number(item['Cheque'] || 0),
-        others: Number(item['Others'] || 0),
-        balance: Number(item['Balance'] || 0),
-        billAmt: Number(item['Bill Amt'] || 0),
-        discAmt: Number(item['Disc Amt'] || 0),
-        refundAmt: Number(item['Refund Amt'] || 0),
-        customer: String(item['Customer'] || ''),
-        cusMob: String(item['CUSMob'] || ''),
-        groupBillNo: String(item['GroupBillno'] || ''),
-      }));
+      const processedTransactions = data.map(item => {
+        // Set entry date as today's date instead of from Excel
+        const today = new Date();
+        today.setUTCHours(12, 0, 0, 0);
+        const entryDate = today;
+
+        return {
+          entryNo: String(item['Entry No'] || item['entryNo'] || ''),
+          entryDate: entryDate,
+          cashier: String(item['Cashier'] || item['cashier'] || 'Unknown'),
+          floor: floor,
+          cash: Number(item['Cash'] || item['cash'] || 0),
+          card: Number(item['Card'] || item['card'] || 0),
+          cheque: Number(item['Cheque'] || item['cheque'] || 0),
+          others: Number(item['Others'] || item['others'] || 0),
+          balance: Number(item['Balance'] || item['balance'] || 0),
+          billAmt: Number(item['Bill Amt'] || item['billAmt'] || item['Bill Amount'] || 0),
+          discAmt: Number(item['Disc Amt'] || item['discAmt'] || 0),
+          refundAmt: Number(item['Refund Amt'] || item['refundAmt'] || 0),
+          customer: String(item['Customer'] || item['customer'] || ''),
+          cusMob: String(item['CUSMob'] || item['cusMob'] || ''),
+          groupBillNo: String(item['GroupBillno'] || item['groupBillNo'] || item['GroupName'] || ''),
+        };
+      }).filter(t => t.entryNo && t.billAmt > 0);
       await storage.bulkCreateTransactions(processedTransactions);
       res.status(201).json({ message: `Successfully processed ${processedTransactions.length} transactions` });
     } catch (error: any) {
@@ -114,8 +125,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const entryNo = String(t.entryNo || t['Entry No'] || t['EntryNo'] || t['Bill No'] || '').trim();
           const billAmt = Number(t.billAmt || t['Bill Amt'] || t['Bill Amount'] || 0);
           
-          const d = t.entryDate ? new Date(t.entryDate) : new Date();
-          const validDate = isNaN(d.getTime()) ? new Date() : d;
+          // Set entry date as today's date instead of from upload data
+          const today = new Date();
+          today.setUTCHours(12, 0, 0, 0);
+          const validDate = today;
           
           return {
             entryNo: entryNo,
@@ -240,13 +253,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ];
 
       // Add data rows
+      const today = new Date();
+      const formattedToday = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
+      
       transactions.forEach(t => {
-        const entryDate = t.entryDate ? new Date(t.entryDate) : new Date();
-        const formattedDate = isNaN(entryDate.getTime()) ? '' : format(entryDate, 'dd-MM-yyyy');
-
         worksheet.addRow({
           entryNo: String(t.entryNo || ''),
-          entryDate: formattedDate,
+          entryDate: formattedToday,
           cashier: String(t.cashier || ''),
           cash: Number(t.cash || 0),
           card: Number(t.card || 0),
@@ -451,6 +464,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       y = drawHeader(y);
       doc.font('Helvetica').fontSize(6.5);
 
+      const today = new Date();
+      const dateStr = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getFullYear()).substring(2)}`;
+
       transactions.forEach((t) => {
         if (y > 520) {
           doc.addPage({ layout: 'landscape', margin: 20 });
@@ -458,9 +474,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           y = drawHeader(y);
           doc.font('Helvetica').fontSize(6.5);
         }
-
-        const entryDate = t.entryDate ? new Date(t.entryDate) : new Date();
-        const dateStr = isNaN(entryDate.getTime()) ? '' : format(entryDate, 'dd/MM/yy');
 
         const rowData = [
           String(t.entryNo || ''),

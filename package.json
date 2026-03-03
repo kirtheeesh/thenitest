@@ -8,7 +8,8 @@
     "build": "tsx script/build.ts",
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc --noEmit",
-    "check:errors": "node ./script/color-check.js"
+    "check:errors": "node ./script/color-check.js",
+    "clear-db": "tsx server/clear_db_final.ts"
   },
   "dependencies": {
     "@babel/preset-typescript": "^7.28.5",
